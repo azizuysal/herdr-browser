@@ -1,0 +1,94 @@
+--- a/pixel/engine/crates/pixel-core/src/terminal.rs
++++ b/pixel/engine/crates/pixel-core/src/terminal.rs
+@@ -293,6 +293,7 @@
+     frame_seq: u64,
+     payloads: Payloads,
+     wrapper: Wrapper,
++    native_herdr: bool,
+     image_id: u32,
+     placeholders: Option<(u32, u32)>,
+     placed_grid: Option<(u32, u32)>,
+@@ -511,6 +512,7 @@
+             wrapper,
+             crate::herdr::HerdrTarget::from_env(&env),
+         );
++        terminal.native_herdr = native_herdr(&env);
+         terminal.kitty_keyboard = terminal.probe_kitty_keyboard()?;
+         if !terminal.kitty_keyboard {
+             terminal.io.out().write_all(b"\x1b[>4;2m")?;
+@@ -563,6 +565,7 @@
+             frame_seq: 0,
+             payloads: Payloads::default(),
+             wrapper,
++            native_herdr: false,
+             image_id: frame_image_id(wrapper.relayed()),
+             placeholders: None,
+             placed_grid: None,
+@@ -1568,6 +1571,10 @@
+ 
+ static NEXT_TERMINAL_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+ 
++
++fn native_herdr(env: &SessionEnv) -> bool {
++    env.var("TERM_PROGRAM").as_deref() == Some("herdr-app")
++}
+ 
+ fn frame_image_id(relayed: bool) -> u32 {
+     if !relayed {
+--- a/pixel/engine/crates/pixel-core/src/terminal/present/full.rs
++++ b/pixel/engine/crates/pixel-core/src/terminal/present/full.rs
+@@ -25,16 +25,13 @@
+             }
+             self.placeholders = None;
+         }
+-        let placement = if self.wrapper.relayed() {
+-            let (cols, rows) = self.grid_for(canvas);
+-            Placement::Cells { cols, rows }
+-        } else {
++        let placement = full_placement(self.wrapper.relayed(), self.native_herdr, self.grid_for(canvas));
++        if matches!(placement, Placement::Cursor { .. }) {
+             if self.identity.deletes_before_replace() {
+                 out.extend_from_slice(&crate::kitty::kitty_delete_placement(self.image_id));
+             }
+             out.extend_from_slice(b"\x1b[H");
+-            Placement::Cursor { z: 0, offset: (0, 0) }
+-        };
++        }
+         let transmit = self.transmit(canvas, placement);
+         match crate::profiler::span("kitty.handoff", || self.hand_off_frame(pixels))? {
+             Some((medium, name)) => {
+@@ -55,3 +52,34 @@
+         Ok(out.len() - start)
+     }
+ }
++
++fn full_placement(relayed: bool, native_herdr: bool, (cols, rows): (u32, u32)) -> Placement {
++    if relayed || native_herdr {
++        Placement::Cells { cols, rows }
++    } else {
++        Placement::Cursor { z: 0, offset: (0, 0) }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn only_native_herdr_selects_the_herdr_placement() {
++        let env = |program: &str| crate::terminal::SessionEnv::of_session(
++            [("TERM_PROGRAM".to_owned(), program.to_owned())].into_iter().collect(),
++        );
++        assert!(crate::terminal::native_herdr(&env("herdr-app")));
++        assert!(!crate::terminal::native_herdr(&env("ghostty")));
++        assert!(!crate::terminal::native_herdr(&crate::terminal::SessionEnv::of_session(Default::default())));
++    }
++
++    #[test]
++    fn full_frames_use_cells_for_native_herdr_and_relayed_terminals() {
++        let cells = Placement::Cells { cols: 80, rows: 24 };
++        assert_eq!(full_placement(false, true, (80, 24)), cells);
++        assert_eq!(full_placement(true, false, (80, 24)), cells);
++        assert_eq!(full_placement(false, false, (80, 24)), Placement::Cursor { z: 0, offset: (0, 0) });
++    }
++}

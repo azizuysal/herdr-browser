@@ -1,0 +1,13 @@
+{
+  "version": "0.15.3",
+  "platform": "darwin-arm64",
+  "rust": "1.97.1",
+  "archive": {
+    "url": "https://github.com/zenbu-labs/terminal-browser/releases/download/v0.15.3/terminal-browser-darwin-arm64.tar.gz",
+    "sha256": "11afbc1c0cc0b8d12bb5effc2e2baf08507dd32456d6e0052824c1bc30c108f0"
+  },
+  "source": {
+    "url": "https://codeload.github.com/zenbu-labs/terminal-browser/tar.gz/refs/tags/v0.15.3",
+    "sha256": "540c17ef0a11519d97a102ef09eae87fd9afaa45b53f8618dc9dac89e98cfde5"
+  }
+}

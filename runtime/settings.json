@@ -1,0 +1,8 @@
+{
+  "telemetry.usage": "off",
+  "telemetry.crashReports": "off",
+  "updates.check": "off",
+  "search.suggestions": "off",
+  "render.presenter": "full",
+  "render.transport": "inline"
+}

@@ -1,0 +1,14 @@
+.cache/
+.test-install*/
+node_modules/
+.DS_Store
+.env*
+*.pem
+*.key
+credentials.*
+projects/
+profiles/
+sessions/
+*.log
+browser-mod/mods/herdr-browser/gpui-kit.d.ts
+browser-mod/mods/herdr-browser/jsconfig.json

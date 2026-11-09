@@ -1,0 +1,32 @@
+{
+  "id": "root",
+  "type": "row",
+  "background": "canvas",
+  "children": [
+    {
+      "id": "sidebar",
+      "type": "column",
+      "size": { "px": 220 },
+      "min": 120,
+      "background": "chrome",
+      "children": [
+        { "id": "spaces", "type": "block", "content": { "mod": "spaces" } },
+        { "id": "agents", "type": "block", "content": { "mod": "agents" } }
+      ]
+    },
+    {
+      "id": "work",
+      "type": "column",
+      "children": [
+        { "id": "launcher", "type": "block", "size": { "px": 40 }, "content": { "mod": "herdr-browser" } },
+        { "id": "tabs", "type": "block", "size": { "px": 42 }, "content": { "mod": "tabs" } },
+        {
+          "id": "tab",
+          "type": "block",
+          "padding": 8,
+          "content": { "tab": "active" }
+        }
+      ]
+    }
+  ]
+}
